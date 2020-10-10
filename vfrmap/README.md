@@ -37,7 +37,10 @@ earlier versions of this app used google maps directly, but this was too expensi
 
 ## compile
 
-`GOOS=windows GOARCH=amd64 go build github.com/lian/msfs2020-go/vfrmap` or see [build-vfrmap.sh](https://github.com/lian/msfs2020-go/blob/master/build-vfrmap.sh)
+1. Generate bindata using `make generate` from this directory
+2. Use
+
+   `GOOS=windows GOARCH=amd64 go build github.com/lian/msfs2020-go/vfrmap` or see [build-vfrmap.sh](https://github.com/lian/msfs2020-go/blob/master/build-vfrmap.sh)
 
 ## Why does my virus-scanning software think this program is infected?
 

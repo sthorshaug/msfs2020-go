@@ -1,12 +1,23 @@
 package leafletjs
 
 import (
+	"log"
 	"net/http"
 )
 
-//go:generate go-bindata -pkg leafletjs -o bindata.go -modtime 1 -prefix "../../../_vendor/leafletjs" "../../../_vendor/leafletjs" "../../../_vendor/leafletjs/images"
+//go:generate go-bindata -pkg leafletjs -o bindata.go -prefix "_vendor/leafletjs_bindata" "_vendor/leafletjs_bindata" "_vendor/leafletjs_bindata/images"
 
 type FS struct {
+}
+
+// MustAsset loads an assets or fails execution if it cannot be loaded
+func MustAsset(name string) []byte {
+	asset, err := Asset(name)
+	if err != nil {
+		log.Fatalf("Could not load asset %s", name)
+	}
+
+	return asset
 }
 
 func (_ FS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -35,8 +46,5 @@ func (_ FS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "images/marker-shadow.png":
 		w.Header().Set("Content-Type", "image/png")
 		w.Write(MustAsset("images/marker-shadow.png"))
-	case "images/plane.png":
-		w.Header().Set("Content-Type", "image/png")
-		w.Write(MustAsset("images/plane.png"))
 	}
 }
