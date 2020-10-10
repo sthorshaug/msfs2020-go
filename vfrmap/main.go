@@ -30,6 +30,7 @@ type Report struct {
 	Longitude     float64   `name:"PLANE LONGITUDE" unit:"degrees"`
 	Heading       float64   `name:"PLANE HEADING DEGREES TRUE" unit:"degrees"`
 	Airspeed      float64   `name:"AIRSPEED INDICATED" unit:"knot"`
+	AirspeedTrue  float64   `name:"AIRSPEED TRUE" unit:"knot"`
 	VerticalSpeed float64   `name:"VERTICAL SPEED" unit:"ft/min"`
 	Flaps         float64   `name:"TRAILING EDGE FLAPS LEFT ANGLE" unit:"degrees"`
 	Trim          float64   `name:"ELEVATOR TRIM PCT" unit:"percent"`
@@ -91,21 +92,18 @@ func (r *TeleportRequest) SetData(s *simconnect.SimConnect) {
 
 var buildVersion string
 var buildTime string
+var disableTeleport bool
 
-var showVersion bool
 var verbose bool
 var httpListen string
 
 func main() {
-	flag.BoolVar(&showVersion, "v", false, "version")
 	flag.BoolVar(&verbose, "verbose", false, "verbose output")
 	flag.StringVar(&httpListen, "listen", "0.0.0.0:9000", "http listen")
+	flag.BoolVar(&disableTeleport, "disable-teleport", false, "disable teleport")
 	flag.Parse()
 
-	if showVersion {
-		fmt.Printf("version: %s (%s)\n", buildVersion, buildTime)
-		return
-	}
+	fmt.Printf("\nmsfs2020-go/vfrmap\n  readme: https://github.com/lian/msfs2020-go/blob/master/vfrmap/README.md\n  issues: https://github.com/lian/msfs2020-go/issues\n  version: %s (%s)\n\n", buildVersion, buildTime)
 
 	exitSignal := make(chan os.Signal, 1)
 	signal.Notify(exitSignal, os.Interrupt, syscall.SIGTERM)
@@ -113,11 +111,11 @@ func main() {
 
 	ws := websockets.New()
 
-	s, err := simconnect.New("VFR Map")
+	s, err := simconnect.New("msfs2020-go/vfrmap")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Connected to Flight Simulator!")
+	fmt.Println("connected to flight simulator!")
 
 	report := &Report{}
 	err = s.RegisterDataDefinition(report)
@@ -137,10 +135,13 @@ func main() {
 		panic(err)
 	}
 
-	eventSimStartID := simconnect.DWORD(0)
+	eventSimStartID := s.GetEventID()
 	//s.SubscribeToSystemEvent(eventSimStartID, "SimStart")
 	//s.SubscribeToFacilities(simconnect.FACILITY_LIST_TYPE_AIRPORT, s.GetDefineID(&simconnect.DataFacilityAirport{}))
 	//s.SubscribeToFacilities(simconnect.FACILITY_LIST_TYPE_WAYPOINT, s.GetDefineID(&simconnect.DataFacilityWaypoint{}))
+
+	startupTextEventID := s.GetEventID()
+	s.ShowText(simconnect.TEXT_TYPE_PRINT_WHITE, 15, startupTextEventID, "msfs2020-go/vfrmap connected")
 
 	go func() {
 		app := func(w http.ResponseWriter, r *http.Request) {
@@ -207,15 +208,27 @@ func main() {
 
 			case simconnect.RECV_ID_OPEN:
 				recvOpen := *(*simconnect.RecvOpen)(ppData)
-				fmt.Println("SIMCONNECT_RECV_ID_OPEN", fmt.Sprintf("%s", recvOpen.ApplicationName))
+				fmt.Printf(
+					"\nflight simulator info:\n  codename: %s\n  version: %d.%d (%d.%d)\n  simconnect: %d.%d (%d.%d)\n\n",
+					recvOpen.ApplicationName,
+					recvOpen.ApplicationVersionMajor,
+					recvOpen.ApplicationVersionMinor,
+					recvOpen.ApplicationBuildMajor,
+					recvOpen.ApplicationBuildMinor,
+					recvOpen.SimConnectVersionMajor,
+					recvOpen.SimConnectVersionMinor,
+					recvOpen.SimConnectBuildMajor,
+					recvOpen.SimConnectBuildMinor,
+				)
 
 			case simconnect.RECV_ID_EVENT:
 				recvEvent := *(*simconnect.RecvEvent)(ppData)
-				fmt.Println("SIMCONNECT_RECV_ID_EVENT")
 
 				switch recvEvent.EventID {
 				case eventSimStartID:
 					fmt.Println("EVENT: SimStart")
+				case startupTextEventID:
+					// ignore
 				default:
 					fmt.Println("unknown SIMCONNECT_RECV_ID_EVENT", recvEvent.EventID)
 				}
@@ -245,6 +258,7 @@ func main() {
 						"altitude":       fmt.Sprintf("%.0f", report.Altitude),
 						"heading":        int(report.Heading),
 						"airspeed":       fmt.Sprintf("%.0f", report.Airspeed),
+						"airspeed_true":  fmt.Sprintf("%.0f", report.AirspeedTrue),
 						"vertical_speed": fmt.Sprintf("%.0f", report.VerticalSpeed),
 						"flaps":          fmt.Sprintf("%.0f", report.Flaps),
 						"trim":           fmt.Sprintf("%.1f", report.Trim),
@@ -279,16 +293,39 @@ func main() {
 func handleClientMessage(m websockets.ReceiveMessage, s *simconnect.SimConnect) {
 	var pkt map[string]interface{}
 	if err := json.Unmarshal(m.Message, &pkt); err != nil {
-		fmt.Println(err)
+		fmt.Println("invalid websocket packet", err)
 	} else {
-		switch pkt["type"].(string) {
+		pktType, ok := pkt["type"].(string)
+		if !ok {
+			fmt.Println("invalid websocket packet", pkt)
+			return
+		}
+		switch pktType {
 		case "teleport":
-			//fmt.Println("teleport request", pkt)
-			r := &TeleportRequest{
-				Latitude:  pkt["lat"].(float64),
-				Longitude: pkt["lng"].(float64),
-				Altitude:  pkt["altitude"].(float64),
+			if disableTeleport {
+				fmt.Println("teleport disabled", pkt)
+				return
 			}
+
+			// validate user input
+			lat, ok := pkt["lat"].(float64)
+			if !ok {
+				fmt.Println("invalid websocket packet", pkt)
+				return
+			}
+			lng, ok := pkt["lng"].(float64)
+			if !ok {
+				fmt.Println("invalid websocket packet", pkt)
+				return
+			}
+			altitude, ok := pkt["altitude"].(float64)
+			if !ok {
+				fmt.Println("invalid websocket packet", pkt)
+				return
+			}
+
+			// teleport
+			r := &TeleportRequest{Latitude: lat, Longitude: lng, Altitude: altitude}
 			r.SetData(s)
 		}
 	}
