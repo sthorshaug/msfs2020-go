@@ -131,6 +131,10 @@
     }
 
     function updateHUD(msg) {
+      if (!hud) {
+        return;
+      }
+
       hud.altitude.innerText = msg.altitude;
       hud.heading.innerText = msg.heading;
       hud.airspeed.innerText = msg.airspeed;
@@ -406,7 +410,7 @@
     </div>
     <div>
       <div>R.Trim</div>
-      <div id="rudder_flaps_value" class="font-bold font-mono text-2xl" :class="{ 'text-gray-200': darkMode }">0</div>
+      <div id="rudder_trim_value" class="font-bold font-mono text-2xl" :class="{ 'text-gray-200': darkMode }">0</div>
     </div>
   </div>
   <div style="display:none;">
