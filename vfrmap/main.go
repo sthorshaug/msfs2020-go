@@ -18,7 +18,7 @@ import (
 	"unsafe"
 
 	"github.com/lian/msfs2020-go/simconnect"
-	"github.com/lian/msfs2020-go/vfrmap/html/leafletjs"
+	"github.com/lian/msfs2020-go/vfrmap/html/dependencies"
 	"github.com/lian/msfs2020-go/vfrmap/websockets"
 )
 
@@ -162,7 +162,7 @@ func main() {
 		}
 
 		http.HandleFunc("/ws", ws.Serve)
-		http.Handle("/leafletjs/", http.StripPrefix("/leafletjs/", leafletjs.FS{}))
+		http.Handle("/static/", http.StripPrefix("/static/", dependencies.FS{}))
 		http.HandleFunc("/", app)
 		//http.Handle("/", http.FileServer(http.Dir(".")))
 
