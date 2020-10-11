@@ -14,11 +14,11 @@ vendor:
 
 	# download tailwindcss
 	mkdir -p _vendor/tailwind
-	curl https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css --output _vendor/tailwind/tailwind.min.css
+	curl --location https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css --output _vendor/tailwind/tailwind.min.css
 
 	# download alpine.js
 	mkdir -p _vendor/alpinejs
-	curl https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.7.0/dist/alpine.min.js --output _vendor/alpinejs/alpine.min.js
+	curl --location https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.7.0/dist/alpine.min.js --output _vendor/alpinejs/alpine.min.js
 
 	# copy all files needed for go-bindata into a separate directory
 	mkdir -p _vendor/bindata
