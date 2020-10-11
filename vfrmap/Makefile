@@ -1,4 +1,4 @@
 .PHONY: generate
 generate:
-	$(MAKE) -C html/leafletjs vendor generate
+	$(MAKE) -C html/dependencies vendor generate
 	go generate
