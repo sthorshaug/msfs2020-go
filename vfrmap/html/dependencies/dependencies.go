@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//go:generate go-bindata -pkg dependencies -o bindata.go -prefix "_vendor/bindata" "_vendor/bindata" "_vendor/bindata/images"
+//go:generate go-bindata -modtime 1 -pkg dependencies -o bindata.go -prefix "_vendor/bindata" "_vendor/bindata" "_vendor/bindata/images"
 
 type FS struct {
 }

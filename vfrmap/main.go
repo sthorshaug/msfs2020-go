@@ -1,6 +1,6 @@
 package main
 
-//go:generate go-bindata -pkg main -o bindata.go -prefix html html
+//go:generate go-bindata -modtime 1 -pkg main -o bindata.go -prefix html html
 
 // build: GOOS=windows GOARCH=amd64 go build -o vfrmap.exe github.com/lian/msfs2020-go/vfrmap
 
