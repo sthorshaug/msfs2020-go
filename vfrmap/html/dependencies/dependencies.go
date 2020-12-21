@@ -1,23 +1,12 @@
 package dependencies
 
 import (
-	"log"
 	"net/http"
 )
 
 //go:generate go-bindata -modtime 1 -pkg dependencies -o bindata.go -prefix "_vendor/bindata" "_vendor/bindata" "_vendor/bindata/images"
 
 type FS struct {
-}
-
-// MustAsset loads an assets or fails execution if it cannot be loaded
-func MustAsset(name string) []byte {
-	asset, err := Asset(name)
-	if err != nil {
-		log.Fatalf("Could not load asset %s", name)
-	}
-
-	return asset
 }
 
 func (_ FS) ServeHTTP(w http.ResponseWriter, r *http.Request) {

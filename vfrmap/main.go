@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -329,14 +328,4 @@ func handleClientMessage(m websockets.ReceiveMessage, s *simconnect.SimConnect) 
 			r.SetData(s)
 		}
 	}
-}
-
-// MustAsset loads an assets or fails execution if it cannot be loaded
-func MustAsset(name string) []byte {
-	asset, err := Asset(name)
-	if err != nil {
-		log.Fatalf("Could not load asset %s", name)
-	}
-
-	return asset
 }
