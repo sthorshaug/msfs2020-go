@@ -1,6 +1,6 @@
 package main
 
-//go:generate go-bindata -pkg main -o bindata.go -modtime 1 -prefix html html
+//go:generate go-bindata -modtime 1 -pkg main -o bindata.go -prefix html html
 
 // build: GOOS=windows GOARCH=amd64 go build -o vfrmap.exe github.com/lian/msfs2020-go/vfrmap
 
@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +18,7 @@ import (
 	"unsafe"
 
 	"github.com/lian/msfs2020-go/simconnect"
-	"github.com/lian/msfs2020-go/vfrmap/html/leafletjs"
+	"github.com/lian/msfs2020-go/vfrmap/html/dependencies"
 	"github.com/lian/msfs2020-go/vfrmap/websockets"
 )
 
@@ -161,7 +162,7 @@ func main() {
 		}
 
 		http.HandleFunc("/ws", ws.Serve)
-		http.Handle("/leafletjs/", http.StripPrefix("/leafletjs/", leafletjs.FS{}))
+		http.Handle("/static/", http.StripPrefix("/static/", dependencies.FS{}))
 		http.HandleFunc("/", app)
 		//http.Handle("/", http.FileServer(http.Dir(".")))
 
@@ -328,4 +329,14 @@ func handleClientMessage(m websockets.ReceiveMessage, s *simconnect.SimConnect) 
 			r.SetData(s)
 		}
 	}
+}
+
+// MustAsset loads an assets or fails execution if it cannot be loaded
+func MustAsset(name string) []byte {
+	asset, err := Asset(name)
+	if err != nil {
+		log.Fatalf("Could not load asset %s", name)
+	}
+
+	return asset
 }
