@@ -22,7 +22,7 @@ vendor:
 
 	# copy all files needed for go-bindata into a separate directory
 	mkdir -p _vendor/bindata
-	cp _vendor/rotatedMarker/Leaflet.RotatedMarker-master/leaflet.rotatedMarker.js _vendor/bindata/
+	cp _vendor/RotatedMarker/Leaflet.RotatedMarker-master/leaflet.rotatedMarker.js _vendor/bindata/
 	cp -r _vendor/leafletjs/leaflet.js _vendor/leafletjs/leaflet.css _vendor/leafletjs/images _vendor/bindata/
 	cp _vendor/tailwind/tailwind.min.css _vendor/bindata/
 	cp _vendor/alpinejs/alpine.min.js _vendor/bindata/
